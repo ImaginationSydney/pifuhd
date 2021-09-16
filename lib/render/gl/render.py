@@ -281,14 +281,35 @@ class Render:
         rgb = data.reshape(self.height, self.width, -1)
         rgb = np.flip(rgb, 0)
         return rgb
+        
 
-    def get_z_value(self):
+    def get_z_value(self, z_near, z_far):
+        scale = 1/(z_far - z_near)
+        glPixelTransferf(GL_DEPTH_BIAS, -z_near * scale)
+        glPixelTransferf(GL_DEPTH_SCALE, scale)
         glBindFramebuffer(GL_FRAMEBUFFER, self.frame_buffer)
         data = glReadPixels(0, 0, self.width, self.height, GL_DEPTH_COMPONENT, GL_FLOAT, outputType=None)
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
-        z = data.reshape(self.height, self.width)
-        z = np.flip(z, 0)
-        return z
+        # data = data.reshape(self.height, self.width)
+        data = np.flip(data, 0)
+
+        data = 1 - data
+        return data
+        
+    def get_z_range(self):
+        glPixelTransferf(GL_DEPTH_BIAS, 0)
+        glPixelTransferf(GL_DEPTH_SCALE, 1)
+        glBindFramebuffer(GL_FRAMEBUFFER, self.frame_buffer)
+        data = glReadPixels(0, 0, self.width, self.height, GL_DEPTH_COMPONENT, GL_FLOAT, outputType=None)
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
+        inf_inds = (data == 1)
+        noninf = np.logical_not(inf_inds)
+
+        near = data[noninf].min()
+        far = data[noninf].max()
+
+        return [near, far]
 
     def display(self):
         # First we draw a scene.
