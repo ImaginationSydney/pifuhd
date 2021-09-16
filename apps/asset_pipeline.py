@@ -96,55 +96,55 @@ def find_files(dir, ext):
 invalid = False
 
 
-# # 1. Break video into images (ffmpeg)
-# img_files = find_files(img_dir, ".jpg")
-# if len(img_files) != frame_count:
-#     invalid = True
-#     print("\n1.Generating images from source video")
-#     cmd = 'ffmpeg  -i "{0}" -vf "transpose=1, crop=1570:3166:272:296" -q:v 2 {1}'.format(source_path, img_file_template)
-#     print(cmd)
-#     os.system(cmd)
-# else:
-#     print("\n1.{} images found, skipping image creation".format(frame_count))
+# 1. Break video into images (ffmpeg)
+img_files = find_files(img_dir, ".jpg")
+if len(img_files) != frame_count:
+    invalid = True
+    print("\n1.Generating images from source video")
+    cmd = 'ffmpeg  -i "{0}" -vf "transpose=1, crop=1570:3166:272:296" -q:v 2 {1}'.format(source_path, img_file_template)
+    print(cmd)
+    os.system(cmd)
+else:
+    print("\n1.{} images found, skipping image creation".format(frame_count))
 
 
-# # 2. Extract audio from video as wav (ffmpeg)
-# if invalid or not os.path.exists(audio_file):
-#     print("\n2.Extracting audio from video as wav")
-#     cmd = 'ffmpeg -i "{0}" -q:a 0 -map a {1}'.format(source_path, audio_file)
-#     print(cmd)
-#     os.system(cmd)
-# else:
-#     print("\n2.Audio found, skipping extraction")
+# 2. Extract audio from video as wav (ffmpeg)
+if invalid or not os.path.exists(audio_file):
+    print("\n2.Extracting audio from video as wav")
+    cmd = 'ffmpeg -i "{0}" -q:a 0 -map a {1}'.format(source_path, audio_file)
+    print(cmd)
+    os.system(cmd)
+else:
+    print("\n2.Audio found, skipping extraction")
 
-# # 3. Run openpose across all video images to generate pose json (see batch_openpose)
-# json_files = find_files(img_dir, ".json")
-# if invalid or len(json_files) != frame_count:
-#     invalid = True
-#     print("\n3.Running Openpose to extract pose information from video frames")
-#     openpose_dir = Path(args.openpose_dir).resolve()
+# 3. Run openpose across all video images to generate pose json (see batch_openpose)
+json_files = find_files(img_dir, ".json")
+if invalid or len(json_files) != frame_count:
+    invalid = True
+    print("\n3.Running Openpose to extract pose information from video frames")
+    openpose_dir = Path(args.openpose_dir).resolve()
     
-#     cmd = '"{0}/bin/OpenPoseDemo.exe" --image_dir {1} --write_json {2} --render_pose 2 --face --face_render 2 --hand --hand_render 2'.format(openpose_dir, img_dir, img_dir)
-#     print(cmd)
+    cmd = '"{0}/bin/OpenPoseDemo.exe" --image_dir {1} --write_json {2} --render_pose 2 --face --face_render 2 --hand --hand_render 2'.format(openpose_dir, img_dir, img_dir)
+    print(cmd)
 
-#     subprocess.run(cmd, cwd=openpose_dir)
-# else:
-#     print("\n3.Pose data found, skipping openpose")
+    subprocess.run(cmd, cwd=openpose_dir)
+else:
+    print("\n3.Pose data found, skipping openpose")
 
-# # 4. Run pifuhd across all image/json files to generate meshes (see simple_test)
-# obj_files = find_files(mesh_dir, ".obj")
-# if invalid or len(obj_files) != frame_count:
-#     invalid = True
-#     print("\n4.Running pifuhd to generate meshes for video frames")
-#     start_id = -1
-#     end_id = -1
-#     cmd = ['--dataroot', img_dir, '--results_path', mesh_dir, '--short_paths', '1', \
-#         '--loadSize', '1024', '--resolution', resolution, '--load_netMR_checkpoint_path', \
-#         args.ckpt_path,\
-#         '--start_id', '%d' % start_id, '--end_id', '%d' % end_id]
-#     reconWrapper(cmd, args.use_rect)
-# else:
-#     print("\n4.{} meshes found, skipping pifuhd".format(frame_count))
+# 4. Run pifuhd across all image/json files to generate meshes (see simple_test)
+obj_files = find_files(mesh_dir, ".obj")
+if invalid or len(obj_files) != frame_count:
+    invalid = True
+    print("\n4.Running pifuhd to generate meshes for video frames")
+    start_id = -1
+    end_id = -1
+    cmd = ['--dataroot', img_dir, '--results_path', mesh_dir, '--short_paths', '1', \
+        '--loadSize', '1024', '--resolution', resolution, '--load_netMR_checkpoint_path', \
+        args.ckpt_path,\
+        '--start_id', '%d' % start_id, '--end_id', '%d' % end_id]
+    reconWrapper(cmd, args.use_rect)
+else:
+    print("\n4.{} meshes found, skipping pifuhd".format(frame_count))
 
 obj_files = find_files(mesh_dir, ".obj")
 print("Found Meshes: {}".format(len(obj_files)))
