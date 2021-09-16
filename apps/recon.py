@@ -152,6 +152,7 @@ def recon(opt, use_rect=False):
         dataroot = opt.dataroot
         resolution = opt.resolution
         results_path = opt.results_path
+        short_paths = opt.short_paths
         loadSize = opt.loadSize
         
         opt = state_dict['opt']
@@ -159,6 +160,7 @@ def recon(opt, use_rect=False):
         opt.resolution = resolution
         opt.results_path = results_path
         opt.loadSize = loadSize
+        opt.short_paths = short_paths
     else:
         raise Exception('failed loading state dict!', state_dict_path)
     
@@ -184,7 +186,9 @@ def recon(opt, use_rect=False):
 
     os.makedirs(opt.checkpoints_path, exist_ok=True)
     os.makedirs(opt.results_path, exist_ok=True)
-    os.makedirs('%s/%s/recon' % (opt.results_path, opt.name), exist_ok=True)
+
+    if opt.short_paths != 1:
+        os.makedirs('%s/%s/recon' % (opt.results_path, opt.name), exist_ok=True)
 
     if start_id < 0:
         start_id = 0
@@ -204,7 +208,10 @@ def recon(opt, use_rect=False):
             if True:
                 test_data = test_dataset[i]
 
-                save_path = '%s/%s/recon/result_%s_%d.obj' % (opt.results_path, opt.name, test_data['name'], opt.resolution)
+                if opt.short_paths == 1:
+                    save_path = '%s/%s.obj' % (opt.results_path, test_data['name'])
+                else:
+                    save_path = '%s/%s/recon/result_%s_%d.obj' % (opt.results_path, opt.name, test_data['name'], opt.resolution)
 
                 print(save_path)
                 gen_mesh(opt.resolution, netMR, cuda, test_data, save_path, components=opt.use_compose)

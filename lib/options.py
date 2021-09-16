@@ -133,6 +133,7 @@ class BaseOptions():
         parser.add_argument('--results_path', type=str, default='./results', help='path to save results ply')
         parser.add_argument('--load_checkpoint_path', type=str, help='path to save results ply')
         parser.add_argument('--single', type=str, default='', help='single data for training')
+        parser.add_argument('--short_paths', type=int, default=0, help='whether to nest results deeply')
         
         # for single image reconstruction
         parser.add_argument('--mask_path', type=str, help='path for input mask')
