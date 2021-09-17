@@ -30,7 +30,8 @@ The output is:
 To run the pipeline, create an empty folder, copy the input video into the folder, and run the following command from the root of this repository.
 
 ```sh
-python -m apps.asset_pipeline --video <abs path to input video> --size 1200
+conda activate pifuhd
+python -m apps.asset_pipeline --video <abs path to input video> --size 1200 --resolution 256
 ```
 
 ## Options
