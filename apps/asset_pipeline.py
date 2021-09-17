@@ -30,6 +30,8 @@ parser.add_argument('-ls', '--loadSize', type=int, default=1024)
 parser.add_argument('-c', '--ckpt_path', type=str, default='./checkpoints/pifuhd.pt')
 parser.add_argument('-op', '--openpose_dir', type=str, default='../openpose')
 parser.add_argument('-f', '--frames', type=int, default=None)
+parser.add_argument('-tr', '--transpose', type=int, default=1)
+parser.add_argument('-cr', '--crop', type=str)
 
 args = parser.parse_args()
 
@@ -107,7 +109,12 @@ img_files = find_files(img_dir, ".jpg")
 if len(img_files) != frame_count:
     invalid = True
     print("\n1.Generating images from source video")
-    cmd = 'ffmpeg -y -i "{0}"{1} -vf "transpose=1, crop=1570:3166:272:296" -q:v 2 {2}'.format(source_path, frame_limit, img_file_template )
+
+    video_filters = "transpose={}".format(str(args.transpose))
+    if args.crop != None:
+        video_filters += ", crop={}".format(args.crop)
+
+    cmd = 'ffmpeg -y -i "{0}"{1} -vf "{2}" -q:v 2 {3}'.format(source_path, frame_limit, video_filters, img_file_template )
     print(cmd)
     os.system(cmd)
 else:

@@ -47,6 +47,10 @@ python -m apps.asset_pipeline --video <abs path to input video> --size 1200
 
 `-f / --frames` - Allows limiting the amount of frames are taken from the input video, mostly useful for testing. The whole video will be processed if not provided. Note that the generated audio file doesn't respect this limit currently.
 
+`-tr / --transpose` (default = 1) - Rotates input video, see ffmpeg docs for [more info](http://underpop.online.fr/f/ffmpeg/help/transpose.htm.gz).
+
+`-cr / --crop` (default = 1) - Crops input video (after rotate), can be passed in `w:h:x:y` format, for example `--crop 1570:3166:272:296`. See ffmpeg docs for [more info](http://underpop.online.fr/f/ffmpeg/help/crop.htm.gz).
+
 ## Steps
 The pipeline goes through the following steps:
 1. Break video into frame images (ffmpeg)
