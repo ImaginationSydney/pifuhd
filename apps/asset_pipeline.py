@@ -70,7 +70,7 @@ os.makedirs(depth_back_dir, exist_ok=True)
     
 
 # Steps
-# 1. Break video into images and wav (ffmpeg)
+# 1. Break video into frame images (ffmpeg)
 # 2. Extract audio from video as wav (ffmpeg)
 # 3. Run openpose across all video images to generate pose json (see batch_openpose)
 # 4. Run pifuhd across all image/json files to generate meshes (see simple_test)

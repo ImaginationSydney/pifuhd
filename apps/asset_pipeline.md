@@ -47,6 +47,19 @@ python -m apps.asset_pipeline --video <abs path to input video> --size 1200
 
 `-f / --frames` - Allows limiting the amount of frames are taken from the input video, mostly useful for testing. The whole video will be processed if not provided. Note that the generated audio file doesn't respect this limit currently.
 
+## Steps
+The pipeline goes through the following steps:
+1. Break video into frame images (ffmpeg)
+2. Extract audio from video as wav (ffmpeg)
+3. Run openpose across all video images to generate pose json (see batch_openpose)
+4. Run pifuhd across all image/json files to generate meshes (see simple_test)
+5. Load each mesh and work out the vertex bounds for scaling
+6. Load each mesh and work out the depth range across all (front and back)
+7. Load each mesh and project depth map using range (front and back) 
+
+Due to this being a very lengthy process, the pipeline will attempt to skip steps that appear to already be completed. It does this mainly by checking if the expected output files of a step already exist in disk. If a step is run, all subsequent steps will also be run.
+
+This means that if the input video is replaced, you should also delete all of the other files in the folder before re-running the pipeline.
 
 ## Installing
 
