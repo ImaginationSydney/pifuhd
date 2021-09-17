@@ -24,13 +24,12 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-v', '--video', type=str, required=True)
-parser.add_argument('-m', '--mesh_dir', type=str, default=None)
-parser.add_argument('-ww', '--width', type=int, default=512)
-parser.add_argument('-hh', '--height', type=int, default=512)
+parser.add_argument('-s', '--size', type=int, default=512)
 parser.add_argument('-r', '--resolution', type=int, default=512)
+parser.add_argument('-ls', '--loadSize', type=int, default=1024)
 parser.add_argument('-c', '--ckpt_path', type=str, default='./checkpoints/pifuhd.pt')
 parser.add_argument('-op', '--openpose_dir', type=str, default='../openpose')
-parser.add_argument('--use_rect', action='store_true', help='use rectangle for cropping')
+parser.add_argument('-f', '--frames', type=int, default=None)
 
 args = parser.parse_args()
 
@@ -38,9 +37,12 @@ source_path = os.path.normpath(args.video)
 source_file = os.path.basename(source_path)
 root_dir = os.path.dirname(source_path)
 
-width = args.width
-height = args.height
+width = args.size
+height = args.size
 resolution = str(args.resolution)
+loadSize = str(args.loadSize)
+frames = args.frames
+
 img_dir = os.path.join(root_dir, "img")
 mesh_dir = os.path.join(root_dir, "meshes")
 depth_front_dir = os.path.join(root_dir, "depth_front")
@@ -77,11 +79,14 @@ os.makedirs(depth_back_dir, exist_ok=True)
 # 7. Load each mesh and project depth map using range (front and back) 
 
 # 0. Count video frames to allow skipping over completed steps
-
-print("Counting video frames")
-count_resp = subprocess.check_output("ffprobe -v error -select_streams v:0 -count_packets -show_entries stream=nb_read_packets -of csv=p=0 {0}".format(source_path))
-frame_count = int(count_resp)
-print("Total video frames: {}".format(frame_count))
+if frames == None:
+    print("Counting video frames")
+    count_resp = subprocess.check_output("ffprobe -v error -select_streams v:0 -count_packets -show_entries stream=nb_read_packets -of csv=p=0 {0}".format(source_path))
+    frame_count = int(count_resp)
+    print("Total video frames: {}".format(frame_count))
+else:
+    print("Using specified frame count {}".format(frames))
+    frame_count = frames
 
 
 def find_files(dir, ext):
@@ -95,13 +100,14 @@ def find_files(dir, ext):
 # This flag forces all subsequent steps to be done
 invalid = False
 
+frame_limit = "" if frames == None else " -vframes {}".format(frames)
 
 # 1. Break video into images (ffmpeg)
 img_files = find_files(img_dir, ".jpg")
 if len(img_files) != frame_count:
     invalid = True
     print("\n1.Generating images from source video")
-    cmd = 'ffmpeg  -i "{0}" -vf "transpose=1, crop=1570:3166:272:296" -q:v 2 {1}'.format(source_path, img_file_template)
+    cmd = 'ffmpeg -y -i "{0}"{1} -vf "transpose=1, crop=1570:3166:272:296" -q:v 2 {2}'.format(source_path, frame_limit, img_file_template )
     print(cmd)
     os.system(cmd)
 else:
@@ -111,7 +117,7 @@ else:
 # 2. Extract audio from video as wav (ffmpeg)
 if invalid or not os.path.exists(audio_file):
     print("\n2.Extracting audio from video as wav")
-    cmd = 'ffmpeg -i "{0}" -q:a 0 -map a {1}'.format(source_path, audio_file)
+    cmd = 'ffmpeg -y -i "{0}"{1} -q:a 0 -map a {2}'.format(source_path, frame_limit, audio_file)
     print(cmd)
     os.system(cmd)
 else:
@@ -139,10 +145,10 @@ if invalid or len(obj_files) != frame_count:
     start_id = -1
     end_id = -1
     cmd = ['--dataroot', img_dir, '--results_path', mesh_dir, '--short_paths', '1', \
-        '--loadSize', '1024', '--resolution', resolution, '--load_netMR_checkpoint_path', \
+        '--loadSize', loadSize, '--resolution', resolution, '--load_netMR_checkpoint_path', \
         args.ckpt_path,\
         '--start_id', '%d' % start_id, '--end_id', '%d' % end_id]
-    reconWrapper(cmd, args.use_rect)
+    reconWrapper(cmd, False)
 else:
     print("\n4.{} meshes found, skipping pifuhd".format(frame_count))
 
@@ -247,10 +253,6 @@ for i, obj_path in enumerate(obj_files):
     vertices = mesh.vertices
     faces = mesh.faces
 
-    # notice that original scale is discarded to render with the same size
-    vertices -= 0.5 * (bbox_max + bbox_min)[None,:]
-    vertices /= bbox_max[1] - bbox_min[1]
-
     normals = compute_normal(vertices, faces)
     
     renderer.set_mesh(vertices, faces, 0.5*normals+0.5, faces)
@@ -277,5 +279,5 @@ for i, obj_path in enumerate(obj_files):
 
 print('')
 
-print("\nAll done!!")
+print("\nAll done!!\n")
     
