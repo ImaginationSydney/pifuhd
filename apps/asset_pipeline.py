@@ -110,11 +110,18 @@ if len(img_files) != frame_count:
     invalid = True
     print("\n1.Generating images from source video")
 
-    video_filters = "transpose={}".format(str(args.transpose))
+    video_filters = ""
+    transpose = str(args.transpose)
+    if transpose != "" and transpose != "0":
+        video_filters += "transpose={}".format(transpose) + ","
+    
     if args.crop != None:
-        video_filters += ", crop={}".format(args.crop)
+        video_filters += "crop={}".format(args.crop)
 
-    cmd = 'ffmpeg -y -i "{0}"{1} -vf "{2}" -q:v 2 {3}'.format(source_path, frame_limit, video_filters, img_file_template )
+    if video_filters != "":
+        video_filters = '-vf "{2}"'.format(video_filters)
+
+    cmd = 'ffmpeg -y -i "{0}"{1} {2} -q:v 2 {3}'.format(source_path, frame_limit, video_filters, img_file_template )
     print(cmd)
     os.system(cmd)
 else:
@@ -155,6 +162,7 @@ if invalid or len(obj_files) != frame_count:
         '--loadSize', loadSize, '--resolution', resolution, '--load_netMR_checkpoint_path', \
         args.ckpt_path,\
         '--start_id', '%d' % start_id, '--end_id', '%d' % end_id]
+    print(' '.join(cmd))
     reconWrapper(cmd, False)
 else:
     print("\n4.{} meshes found, skipping pifuhd".format(frame_count))
